@@ -15,7 +15,6 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	// FIXME migrate to docker/distribution/reference
 	"github.com/docker/docker/reference"
-	"github.com/docker/docker/registry"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/net/context"
@@ -77,14 +76,7 @@ func pullImage(ctx context.Context, dockerCli *command.DockerCli, image string, 
 		return err
 	}
 
-	// Resolve the Repository name from fqn to RepositoryInfo
-	repoInfo, err := registry.ParseRepositoryInfo(ref)
-	if err != nil {
-		return err
-	}
-
-	authConfig := command.ResolveAuthConfig(ctx, dockerCli, repoInfo.Index)
-	encodedAuth, err := command.EncodeAuthToBase64(authConfig)
+	encodedAuth, err := command.GetEncodedAuth(dockerCli, ref)
 	if err != nil {
 		return err
 	}

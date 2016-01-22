@@ -121,7 +121,24 @@ func (daemon *Daemon) ImageDelete(imageRef string, force, prune bool) ([]types.I
 				// Remove canonical references from same repository
 				remainingRefs := []reference.Named{}
 				for _, repoRef := range repoRefs {
-					if _, repoRefIsCanonical := repoRef.(reference.Canonical); repoRefIsCanonical && parsedRef.Name() == repoRef.Name() {
+					r := parsedRef
+					if !reference.IsReferenceFullyQualified(r) {
+						index, _, err := reference.SplitReposName(repoRef)
+						if err != nil {
+							return nil, err
+						}
+						// this happens when someone pulls an image
+						// with upstream docker but removes it with RH docker.
+						// or when we get a tagged image which doesn't really
+						// have an index.
+						if index != "" {
+							r, err = reference.QualifyUnqualifiedReference(r, index)
+							if err != nil {
+								return nil, err
+							}
+						}
+					}
+					if _, repoRefIsCanonical := repoRef.(reference.Canonical); repoRefIsCanonical && r.Name() == repoRef.Name() {
 						if _, err := daemon.removeImageRef(repoRef); err != nil {
 							return records, err
 						}

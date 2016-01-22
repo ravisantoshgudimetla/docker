@@ -50,12 +50,12 @@ func runPush(dockerCli *command.DockerCli, name string) error {
 	if err != nil {
 		return err
 	}
-	authConfig := command.ResolveAuthConfig(ctx, dockerCli, repoInfo.Index)
-
-	encodedAuth, err := command.EncodeAuthToBase64(authConfig)
+	encodedAuth, err := command.GetEncodedAuth(dockerCli, named)
 	if err != nil {
 		return err
 	}
+	authConfig := command.ResolveAuthConfig(ctx, dockerCli, repoInfo.Index)
+
 	responseBody, err := dockerCli.Client().PluginPush(ctx, ref.String(), encodedAuth)
 	if err != nil {
 		return err
